@@ -1,0 +1,42 @@
+{
+  "base_url": "http://localhost:28852",
+  "auth": {
+    "admin": {"username": "admin", "password": "admin"},
+    "merchant": {"username": "merchant1", "password": "merchant"}
+  },
+  "tests": [
+    {
+      "name": "Register first admin (no auth)",
+      "method": "POST",
+      "path": "/api/auth/user",
+      "body": {"name": "admin", "username": "admin", "password": "admin"},
+      "expected_status": 201,
+      "auth_required": false
+    },
+    {
+      "name": "Register duplicate admin",
+      "method": "POST",
+      "path": "/api/auth/user",
+      "body": {"name": "admin", "username": "admin", "password": "admin"},
+      "expected_status": 409,
+      "auth_required": false
+    },
+    {
+      "name": "Create merchant with admin auth",
+      "method": "POST",
+      "path": "/api/auth/user",
+      "body": {"name": "merchant", "username": "merchant1", "password": "merchant"},
+      "expected_status": 201,
+      "auth_role": "admin"
+    },
+    {
+      "name": "Transaction from merchant",
+      "method": "POST",
+      "path": "/api/antifraud/transaction",
+      "body": {"amount":5000, "ip":"192.168.1.1", "number":"4000008449433403", "region":"EAP", "date":"2023-01-01T12:00:00"},
+      "expected_status": 200,
+      "expected_body_contains": {"result": ["ALLOWED", "MANUAL_PROCESSING", "PROHIBITED"]},
+      "auth_role": "merchant"
+    }
+  ]
+}
