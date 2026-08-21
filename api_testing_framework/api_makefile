@@ -1,0 +1,14 @@
+.PHONY: install test test-fast test-html
+
+install:
+	python -m pip install --upgrade pip
+	pip install -r api_testing_framework/requirements.txt
+
+test:
+	pytest api_testing_framework/tests
+
+test-fast:
+	pytest -m "not slow" api_testing_framework/tests
+
+test-html:
+	pytest --html=api_testing_framework/reports/report.html api_testing_framework/tests

@@ -1,6 +1,7 @@
 pytest
 requests
 jsonschema
+python-dotenv
 pytest-timeout
 pytest-html
-python-dotenv
+urllib3
