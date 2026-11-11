@@ -1,59 +1,64 @@
 import pytest
 from api_testing_framework.utils.test_data import CREATE_USER, UPDATE_USER
 
-USER_SCHEMA_DATA = {
+
+USER_SCHEMA = {
     "type": "object",
     "properties": {
-        "id": {"type": ["integer", "string"]},
+        "id": {"type": "integer"},
+        "name": {"type": "string"},
+        "username": {"type": "string"},
         "email": {"type": "string"},
-        "first_name": {"type": "string"},
-        "last_name": {"type": "string"},
-        "avatar": {"type": "string"}
     },
-    "required": ["id"]
+    "required": ["id", "name", "username", "email"],
 }
 
+
 def test_get_users_list(client):
-    r = client.get('users', params={'page': 2})
-    assert r.status_code == 200
-    assert 'application/json' in r.headers.get('Content-Type', '')
-    assert r.elapsed_ms < 2000
-    j = r.json()
-    assert 'data' in j
-    if j['data']:
-        # validate first element structure (loose)
-        client.validate_schema(j['data'][0], USER_SCHEMA_DATA)
+    response = client.get("users")
+
+    assert response.status_code == 200
+    assert "application/json" in response.headers.get("Content-Type", "")
+
+    users = response.json()
+
+    assert isinstance(users, list)
+    assert users
+    client.validate_schema(users[0], USER_SCHEMA)
+
 
 def test_get_single_user(client):
-    r = client.get('users/2')
-    assert r.status_code == 200
-    j = r.json()
-    assert 'data' in j
-    client.validate_schema(j['data'], USER_SCHEMA_DATA)
+    response = client.get("users/1")
 
-@pytest.fixture
-def created_user(client):
-    r = client.post('users', json=CREATE_USER)
-    assert r.status_code in (201, 200)
-    j = r.json()
-    # reqres returns id and createdAt
-    uid = j.get('id')
-    yield uid
-    # cleanup if API supports delete (reqres doesn't actually persist, but pattern shown)
-    if uid:
-        client.delete(f'users/{uid}')
+    assert response.status_code == 200
 
-def test_create_update_delete_user(client, created_user):
-    uid = created_user
-    assert uid is not None
-    # update
-    r = client.put(f'users/{uid}', json=UPDATE_USER)
-    assert r.status_code in (200, 201)
-    j = r.json()
-    assert 'updatedAt' in j or j.get('job') == UPDATE_USER['job']
+    user = response.json()
 
-def test_negative_create_user_invalid_payload(client):
-    # missing required fields
-    r = client.post('users', json={"invalid": "data"})
-    # depending on API could be 400 or 201; assert either way but check response for expected behavior
-    assert r.status_code in (400, 201, 422)
+    assert user["id"] == 1
+    assert user["username"] == "Bret"
+    client.validate_schema(user, USER_SCHEMA)
+
+
+def test_create_user(client):
+    response = client.post("users", json=CREATE_USER)
+
+    assert response.status_code == 201
+
+    created_user = response.json()
+
+    assert created_user["name"] == CREATE_USER["name"]
+    assert created_user["username"] == CREATE_USER["username"]
+    assert created_user["email"] == CREATE_USER["email"]
+    assert "id" in created_user
+
+
+def test_update_user(client):
+    response = client.put("users/1", json=UPDATE_USER)
+
+    assert response.status_code == 200
+
+    updated_user = response.json()
+
+    assert updated_user["name"] == UPDATE_USER["name"]
+    assert updated_user["username"] == UPDATE_USER["username"]
+    assert updated_user["email"] == UPDATE_USER["email"]
