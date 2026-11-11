@@ -1,6 +1,7 @@
 {
-  "base_url": "https://reqres.in/api",
+  "base_url": "https://jsonplaceholder.typicode.com",
   "auth": {
     "token": ""
-  }
+  },
+  "timeout": 10
 }
