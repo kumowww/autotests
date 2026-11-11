@@ -13,3 +13,7 @@ def test_login_emulation(client):
     assert r.status_code == 200
     body = r.json()
     assert 'token' in body
+def test_unknown_endpoint_returns_not_found(client):
+    response = client.get("not-a-real-endpoint")
+
+    assert response.status_code == 404
